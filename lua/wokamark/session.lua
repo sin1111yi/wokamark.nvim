@@ -129,7 +129,16 @@ function M.open_tree_if_available()
   pcall(vim.cmd, 'wincmd p') -- keep focus on the edit window
 end
 
-function M.load_entry(entry)
+function M.load_entry(entry, opts)
+  opts = opts or {}
+  -- Idempotency for MANUAL loads (WokaMarkOpen on the current workspace):
+  -- re-sourcing the session would stack another layout on top (duplicate
+  -- splits, stray No Name buffers). Auto-restore (auto_restore) passes
+  -- { force = true } — startup restore must run even when cwd matches.
+  if not opts.force and vim.fn.getcwd() == entry.cwd then
+    vim.notify('Wokamark: already in ' .. storage.display_name(entry), vim.log.levels.INFO)
+    return
+  end
   local p = storage.session_path(entry.session)
   if vim.fn.filereadable(p) == 0 then
     vim.notify('Wokamark: session file missing: ' .. p, vim.log.levels.WARN)
@@ -178,7 +187,7 @@ function M.auto_restore()
       local wh = w.path_hash or (type(w.cwd) == 'string' and storage.path_hash(w.cwd) or nil)
       if wh and wh == h then
         vim.g.wokamark_restored = true -- tell nvim-tree (VeryLazy) to skip its auto-open
-        M.load_entry(w)
+        M.load_entry(w, { force = true })
         return
       end
     end
