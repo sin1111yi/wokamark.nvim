@@ -144,7 +144,11 @@ function M.load_entry(entry)
     return
   end
   pcall(vim.cmd, 'source ' .. vim.fn.fnameescape(p))
-  open_tree_if_available()
+  -- Re-open the tree (if the plugin is available and no tree window is
+  -- open yet). It was made a module function during the tree-ownership
+  -- refactor — must be called as M.open_tree_if_available (bare name would
+  -- look up a global and fail with E5108).
+  M.open_tree_if_available()
   vim.notify('Wokamark: loaded ' .. storage.display_name(entry), vim.log.levels.INFO)
 end
 
