@@ -108,7 +108,12 @@ end
 -- Args given (file/dir) -> open the tree (matches get a session restored
 -- first; if that session had no tree, the tree is added on the left).
 -- Bare `nvim` -> no tree (a restored session brings its own layout).
+-- Uses g:startup_argc (captured at VimEnter by options.lua): a session
+-- restore sources `%argdel`, which zeroes live argc.
 function M.should_open_tree()
+  if vim.g.startup_argc ~= nil then
+    return vim.g.startup_argc
+  end
   return vim.fn.argc() > 0
 end
 
