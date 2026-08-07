@@ -32,8 +32,8 @@ function M.setup(opts)
   if ok and type(th.register_doc) == 'function' then
     pcall(th.register_doc, {
       id = 'wokamark',
-      name = 'wokamark 使用',
-      fn = function() return M.help_lines() end,
+      name = { en = 'wokamark usage', zh = 'wokamark 使用' },
+      text = { en = M.help_lines('en'), zh = M.help_lines('zh') },
     })
   end
   return M
@@ -531,9 +531,12 @@ end
 
 -- Language follows the system locale (LC_ALL > LC_MESSAGES > LANG);
 -- zh* -> 中文, anything else -> English.
-function M.help_lines()
-  local lang = vim.env.LC_ALL or vim.env.LC_MESSAGES or vim.env.LANG or ''
-  lang = lang:lower()
+-- Help lines, bilingual. With no argument, the system locale decides
+-- (LC_ALL > LC_MESSAGES > LANG; zh* -> Chinese, else English). With a
+-- 'zh'/'en' argument, that language is returned explicitly (used by the
+-- trigger-help registration, which stores both languages).
+function M.help_lines(lang)
+  lang = lang or (vim.env.LC_ALL or vim.env.LC_MESSAGES or vim.env.LANG or ''):lower()
   if lang:match('^zh') then
     return {
       'WokaMark — 工作区会话管理',
