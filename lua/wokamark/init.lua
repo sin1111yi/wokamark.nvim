@@ -16,6 +16,8 @@
 
 local M = {}
 
+local ns = vim.api.nvim_create_namespace('wokamark')
+
 -- config with defaults (zero hardcoding: tunables live here, not in code)
 M.config = {
   auto_mark = true, -- debounced auto-marking on file events
@@ -446,6 +448,13 @@ function M.manage_picker()
     lines[#lines + 1] = '  d 删除  r 重命名  a 添加  i 详情  <CR> 恢复  q 退出'
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].modifiable = false
+    -- hint bar in a theme-aware group (follows the active colorscheme)
+    vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+    local hint_line = #lines
+    vim.api.nvim_buf_set_extmark(buf, ns, hint_line - 1, 0, {
+      hl_group = 'Comment',
+      end_col = #lines[hint_line],
+    })
     local maxline = math.max(1, math.min(#workspaces, #lines))
     local row = keep_cursor and math.min(vim.api.nvim_win_get_cursor(0)[1], maxline) or 1
     vim.api.nvim_win_set_cursor(0, { row, 0 })
