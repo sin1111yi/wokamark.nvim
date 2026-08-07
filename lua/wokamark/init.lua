@@ -477,6 +477,11 @@ function M.manage_picker()
       load_entry(item)
     end,
   })
+  -- Open in normal mode so d/r/a/i act directly (nvim-tree style),
+  -- instead of being typed into the insert-mode filter.
+  vim.schedule(function()
+    pcall(vim.cmd, 'stopinsert')
+  end)
 end
 
 -- ── public: help (centered floating window) ─────────────────────────
