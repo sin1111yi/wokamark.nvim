@@ -30,12 +30,14 @@ end, { desc = 'WokaMark: show floating help' })
 -- Auto restore on startup: hash of the opened path (argv(0) is still the
 -- real path at VimEnter time — plugin windows rewrite argv only later),
 -- matched against marked workspace path hashes.
+-- Synchronous (no vim.schedule): the restore must complete BEFORE the
+-- VeryLazy plugins run, so nvim-tree's open/cleanup sees the restored
+-- layout. If it ran later (scheduled), it could re-source a session over
+-- the tree nvim-tree just opened.
 vim.api.nvim_create_autocmd('VimEnter', {
   once = true,
   callback = function()
-    vim.schedule(function()
-      pcall(require('wokamark').auto_restore)
-    end)
+    pcall(require('wokamark').auto_restore)
   end,
 })
 
