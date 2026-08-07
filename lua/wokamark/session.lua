@@ -93,7 +93,7 @@ function M._mark_impl(opts)
   if not replaced then
     table.insert(workspaces, entry)
   end
-  -- index 写失败（只读/磁盘满）：WARN 已由 write_index 发出，中止并保留旧状态
+  -- Abort and keep the old state when the index cannot be written
   if not storage.write_index(workspaces) then return end
 
   if not opts.silent then
@@ -131,10 +131,8 @@ end
 
 function M.load_entry(entry, opts)
   opts = opts or {}
-  -- Idempotency for MANUAL loads (WokaMarkOpen on the current workspace):
-  -- re-sourcing the session would stack another layout on top (duplicate
-  -- splits, stray No Name buffers). Auto-restore (auto_restore) passes
-  -- { force = true } — startup restore must run even when cwd matches.
+  -- Manual loads skip when already in this workspace (re-sourcing would
+  -- stack a duplicate layout); auto-restore passes { force = true }.
   if not opts.force and vim.fn.getcwd() == entry.cwd then
     vim.notify('Wokamark: already in ' .. storage.display_name(entry), vim.log.levels.INFO)
     return
@@ -153,10 +151,6 @@ function M.load_entry(entry, opts)
     return
   end
   pcall(vim.cmd, 'source ' .. vim.fn.fnameescape(p))
-  -- Re-open the tree (if the plugin is available and no tree window is
-  -- open yet). It was made a module function during the tree-ownership
-  -- refactor — must be called as M.open_tree_if_available (bare name would
-  -- look up a global and fail with E5108).
   M.open_tree_if_available()
   vim.notify('Wokamark: loaded ' .. storage.display_name(entry), vim.log.levels.INFO)
 end
