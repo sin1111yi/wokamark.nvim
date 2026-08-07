@@ -142,9 +142,9 @@ local function truncate_utf8(s, maxbytes)
   return s:sub(1, cut)
 end
 
--- display name shown in pickers (name alias > repo > cwd)
+-- display name shown in lists (alias > repo > cwd)
 local function display_name(w)
-  return w.name or w.repo or w.cwd
+  return w.alias or w.name or w.repo or w.cwd
 end
 
 -- session file name:
@@ -229,6 +229,7 @@ function M._mark_impl(opts)
     repo = git and git.repo or nil,
     branch = git and git.branch or nil,
     hash = git and git.hash or nil,
+    alias = nil, -- user-facing alias; set via Manage r (display_name prefers it)
     path_slug = path_slug(cwd),
     path_hash = path_hash(cwd),
     last_used = os.date('%Y-%m-%dT%H:%M:%S'),
@@ -385,12 +386,12 @@ function M._delete(entry)
   vim.notify('Wokamark: deleted ' .. display_name(entry), vim.log.levels.INFO)
 end
 
--- rename a workspace (alias only; session file name is untouched)
+-- rename a workspace (sets the user-facing alias; session file untouched)
 function M._rename(entry, new_name)
   local workspaces = read_index()
   for _, w in ipairs(workspaces) do
     if w.session == entry.session then
-      w.name = new_name
+      w.alias = new_name
       if write_index(workspaces) then
         vim.notify('Wokamark: renamed to "' .. new_name .. '"', vim.log.levels.INFO)
       end
@@ -422,9 +423,7 @@ function M.manage_picker()
     local lines = {}
     for i, w in ipairs(workspaces) do
       local git = w.repo and (' (' .. (w.branch or '') .. ' [' .. (w.hash or '') .. '])') or ''
-      local used = (w.last_used or ''):gsub('T', ' ')
       lines[#lines + 1] = string.format('%2d  %s%s', i, display_name(w), git)
-      lines[#lines + 1] = string.format('    %s  ·  used %s', w.cwd or '', used)
     end
     if #lines == 0 then
       lines = { '  (no workspaces yet — :WokaMarkCurrent to mark this path)' }
