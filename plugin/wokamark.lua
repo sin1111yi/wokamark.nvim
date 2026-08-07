@@ -57,3 +57,11 @@ vim.api.nvim_create_autocmd('CursorHold', {
     pcall(require('wokamark').check_git_head)
   end,
 })
+
+-- Save the workspace on quit (e.g. :wqa via <leader>qq): updates the mark
+-- with the latest session state so the next open of this path restores it.
+vim.api.nvim_create_autocmd('VimLeavePre', {
+  callback = function()
+    pcall(require('wokamark').mark, { silent = true })
+  end,
+})
