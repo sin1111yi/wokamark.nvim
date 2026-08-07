@@ -103,9 +103,19 @@ end
 
 -- ── load ────────────────────────────────────────────────────────────
 
--- Open nvim-tree after a load, when the plugin is available and no tree
--- window is open yet (best-effort, never errors).
-local function open_tree_if_available()
+-- ── tree ownership ─────────────────────────────────────────────────
+-- wokamark owns the startup layout: nvim-tree asks us whether to open.
+-- Args given (file/dir) -> open the tree (matches get a session restored
+-- first; if that session had no tree, the tree is added on the left).
+-- Bare `nvim` -> no tree (a restored session brings its own layout).
+function M.should_open_tree()
+  return vim.fn.argc() > 0
+end
+
+-- Open nvim-tree when it is available and no tree window is open yet
+-- (best-effort, never errors). Used after a wokamark load (WokaMarkOpen /
+-- auto-restore) to (re)add the tree once nvim-tree itself is loaded.
+function M.open_tree_if_available()
   if vim.fn.exists(':NvimTreeOpen') ~= 2 then return end
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == 'NvimTree' then return end

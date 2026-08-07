@@ -50,5 +50,7 @@ M.help_lines = ui.help_lines
 M.auto_restore = session.auto_restore
 M.auto_mark = session.auto_mark
 M.check_git_head = session.check_git_head
+M.should_open_tree = session.should_open_tree
+M.open_tree_if_available = session.open_tree_if_available
 
 return M
