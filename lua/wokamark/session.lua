@@ -158,6 +158,7 @@ function M.auto_restore()
     for _, w in ipairs(index) do
       local wh = w.path_hash or (type(w.cwd) == 'string' and storage.path_hash(w.cwd) or nil)
       if wh and wh == h then
+        vim.g.wokamark_restored = true -- tell nvim-tree (VeryLazy) to skip its auto-open
         M.load_entry(w)
         return
       end
