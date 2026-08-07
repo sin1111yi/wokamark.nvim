@@ -88,7 +88,7 @@ end
 
 -- fields persisted to index.json (pickers decorate entries with text/score/
 -- match_tick/idx — never write those back)
-local INDEX_FIELDS = { 'cwd', 'repo', 'branch', 'hash', 'path_slug', 'path_hash', 'session', 'last_used', 'name' }
+local INDEX_FIELDS = { 'cwd', 'repo', 'branch', 'hash', 'path_slug', 'path_hash', 'session', 'last_used', 'name', 'alias' }
 
 local function write_index(workspaces)
   vim.fn.mkdir(state_dir, 'p')
