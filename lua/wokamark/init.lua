@@ -24,6 +24,18 @@ M.config = {
 
 function M.setup(opts)
   M.config = vim.tbl_deep_extend('force', M.config, opts or {})
+  -- Register the command cheatsheet with trigger-help when that plugin
+  -- is available (best-effort: trigger-help not installed/loaded ->
+  -- skip silently, never error). fn source keeps the registered doc in
+  -- sync with :WokaMarkHelp (single source of truth).
+  local ok, th = pcall(require, 'trigger_help')
+  if ok and type(th.register_doc) == 'function' then
+    pcall(th.register_doc, {
+      id = 'wokamark',
+      name = 'wokamark 使用',
+      fn = function() return M.help_lines() end,
+    })
+  end
   return M
 end
 
@@ -519,7 +531,7 @@ end
 
 -- Language follows the system locale (LC_ALL > LC_MESSAGES > LANG);
 -- zh* -> 中文, anything else -> English.
-local function help_lines()
+function M.help_lines()
   local lang = vim.env.LC_ALL or vim.env.LC_MESSAGES or vim.env.LANG or ''
   lang = lang:lower()
   if lang:match('^zh') then
@@ -555,7 +567,7 @@ local function help_lines()
 end
 
 function M.help()
-  local lines = help_lines()
+  local lines = M.help_lines()
   local width = 64
   local height = #lines + 2
   local buf = vim.api.nvim_create_buf(false, true)

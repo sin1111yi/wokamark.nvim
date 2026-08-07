@@ -27,6 +27,12 @@ Per-directory workspace session restore for Neovim (successor of `workmark.nvim`
 require('wokamark').setup({ auto_mark = true })
 ```
 
+On setup, wokamark registers its command cheatsheet with trigger-help.nvim
+via `require('trigger_help').register_doc({ id = 'wokamark', ... })` when
+that plugin is available — best-effort: trigger-help missing → skipped
+silently. Open it with `:TriggerHelp wokamark`, or browse `[wokamark]` from
+the trigger-help picker.
+
 ## Storage
 
 `stdpath('state')/wokamark/index.json` + `sessions/<name>.vim`.
