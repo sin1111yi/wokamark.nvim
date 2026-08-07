@@ -419,6 +419,7 @@ function M.manage_picker()
   end
 
   local function redraw(keep_cursor)
+    vim.bo[buf].modifiable = true -- redraw must re-enable before set_lines
     local workspaces = read_index()
     local lines = {}
     for i, w in ipairs(workspaces) do
