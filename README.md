@@ -1,94 +1,124 @@
 # wokamark.nvim
 
 **Per-directory workspace session restore for Neovim**
-**Neovim 按目录工作区会话保存与恢复**
 
-Successor of `workmark.nvim`（workmark.nvim 的继任者）。
+Successor of `workmark.nvim`.
 
-打开 Neovim 时，根据打开路径自动恢复对应工作区（目录）的会话——窗口布局、buffer、光标位置全部还原。标记、恢复、管理全部通过命令完成，无需手动加载 session 文件。
-
----
-
-## Features / 特性
-
-- **Auto-restore / 自动恢复** — 打开路径哈希匹配已标记工作区，命中即恢复
-- **Auto-mark / 自动标记** — 编辑/保存/切换 git 分支时自动记录（可关闭）
-- **Alias / 别名** — 每个工作区可设置展示别名（不影响文件名）
-- **Manage UI / 管理界面** — lazygit 风格管理窗口，`d/r/a/i` 快捷键
-- **Trigger-help integration / 集成 trigger-help** — 命令速查自动注册进 trigger-help 文档浏览
+When Neovim opens, the workspace (directory) whose path hash matches the
+opened path is auto-restored — window layout, buffers and cursor positions
+all come back. Marking, restoring and managing are done through commands; no
+manual session-file loading.
 
 ---
 
-## Commands / 命令
+## Features
 
-| 命令 | 说明 | Description |
-|------|------|-------------|
-| `:WokaMarkCurrent` | 标记当前路径 | Mark the current path |
-| `:WokaMarkOpen` | 打开选择器，选择工作区恢复 | Picker over marked workspaces; select to restore |
-| `:WokaMarkManage` | 管理界面（列表 + 快捷键） | Manage UI (list + shortcuts) |
-| `:WokaMarkHelp` | 浮动帮助窗口 | Floating help (locale-aware) |
-
-### Manage shortcuts / 管理快捷键
-
-| 键 | 动作 | Action |
-|----|------|--------|
-| `d` | 删除当前工作区 | Delete the selected workspace |
-| `r` | 重命名（设置别名） | Rename (set alias) |
-| `a` | 添加（标记当前路径） | Add (mark current path) |
-| `i` | 查看详情（路径/分支/时间等） | Show full details |
-| `<CR>` | 恢复选中工作区 | Restore selected workspace |
-| `q` / `<Esc>` | 关闭管理窗口 | Close the manage window |
+- **Auto-restore** — opened path is hashed and matched against marked
+  workspaces (walking up ancestor directories); hit → session restored
+- **Auto-mark** — editing, saving and git branch changes auto-record the
+  workspace (debounced; can be disabled)
+- **Alias** — each workspace can carry a display alias (does not touch the
+  auto-generated session filename)
+- **Manage UI** — lazygit-style management window with `d/r/a/i` shortcuts
+- **Trigger-help integration** — command cheatsheet auto-registers with
+  trigger-help.nvim
 
 ---
 
-## Behavior / 行为
+## Commands
 
-### Auto-restore / 自动恢复
+| Command | Description |
+|---------|-------------|
+| `:WokaMarkCurrent` | Mark the current path |
+| `:WokaMarkOpen` | Picker over marked workspaces; select to restore |
+| `:WokaMarkManage` | Manage UI (list + shortcuts) |
+| `:WokaMarkHelp` | Floating help (locale-aware) |
 
-On startup, the hash of the opened path is matched against marked workspaces'
-path hashes, walking up ancestor directories:
+### Manage shortcuts
 
-启动时计算打开路径的哈希（有文件参数 → 取父目录；无参数 → 取启动目录），
-与已标记工作区的路径哈希匹配，沿祖先目录逐级查找。命中 → 自动恢复该工作区会话。
+| Key | Action |
+|-----|--------|
+| `d` | Delete the selected workspace |
+| `r` | Rename (set alias) |
+| `a` | Add (mark current path) |
+| `i` | Show full details (path/branch/time) |
+| `<CR>` | Restore selected workspace |
+| `q` / `<Esc>` | Close the manage window |
+
+---
+
+## Behavior
+
+### Auto-restore
+
+On startup, the hash of the opened path is matched against marked
+workspaces' path hashes, walking up ancestor directories (a file arg hashes
+its parent dir; no args → the startup cwd is hashed). Hit → restore.
 
 ```
-nvim ~/projects/wokamark.nvim   → 匹配到标记过的工作区 → 恢复
-nvim                            → 启动目录匹配 → 恢复（若标记过）
+nvim ~/projects/wokamark.nvim   → matches a marked workspace → restored
+nvim                            → startup cwd matched → restored (if marked)
 ```
 
-### Auto-mark / 自动标记
+### Auto-mark
 
 On `BufReadPost` / `InsertLeave` / `BufWritePost` / git HEAD change,
-debounced (30 s per directory):
-
-编辑文件、离开插入模式、保存、git 分支切换时自动标记当前目录
-（每目录 30 秒防抖合并）。默认开启：
+debounced (30 s per directory). Enabled by default:
 
 ```lua
-require('wokamark').setup({ auto_mark = false })  -- 关闭自动标记
+require('wokamark').setup({ auto_mark = false })  -- disable
 ```
 
-### Alias / 别名
+### Alias
 
-Every workspace can carry a user-facing alias. It only affects display —
-the session file name stays auto-generated (`<repo>-<branch>-<hash>-<cwd>.vim`):
-
-每个工作区可有展示别名——只影响显示，**不改动自动生成的 session 文件名**。
+Every workspace can carry a user-facing alias. It only affects display — the
+session filename stays auto-generated (`<repo>-<branch>-<hash>-<cwd>.vim`):
 
 ```
-:WokaMarkManage → r → 输入别名 → 列表立即显示别名
+:WokaMarkManage → r → type alias → list shows it immediately
 ```
 
-Display priority: `alias > repo > cwd`（显示优先级：别名 > 仓库名 > 路径）。
+Display priority: `alias > repo > cwd`.
 
 ---
 
-## Installation / 安装
+## Installation
 
-Source repo: `~/projects/wokamark.nvim` (git). Install via vim.pack local path
-(`plugins.lua`):
+### lazy.nvim (recommended)
 
-源码仓库：`~/projects/wokamark.nvim`（git）。通过 vim.pack 本地路径安装：
+```lua
+-- plugin spec
+{
+  'sin1111yi/wokamark.nvim',
+  lazy = false, -- eager: needs VimEnter hooks for auto-restore
+  config = function()
+    require('wokamark').setup({ auto_mark = true })
+  end,
+}
+```
+
+Then `:Lazy sync` inside Neovim.
+
+#### Dev mode (local source)
+
+While developing, load from a local checkout instead of GitHub:
+
+```lua
+require('lazy').setup({
+  dev = {
+    path = '~/Development',                  -- local dev directory
+    patterns = { 'github.com/sin1111yi/' },   -- repos matching this URL pattern
+    fallback = true,                          -- fall back to GitHub when missing
+  },
+  -- ...
+})
+```
+
+`:Lazy dev` lists dev plugins; `:Lazy dev <plugin>` toggles dev mode.
+When `~/Development/wokamark.nvim` exists it is used; other machines without
+it fall back to the GitHub install.
+
+### vim.pack (legacy)
 
 ```lua
 -- plugins.lua
@@ -100,10 +130,6 @@ vim.pack.add({
 -- nvim --headless -c 'lua vim.pack.update()' -c 'qa!'
 ```
 
-Then in your config (`loader.lua` or similar):
-
-配置中加载：
-
 ```lua
 vim.cmd('packadd wokamark.nvim')
 require('wokamark').setup({ auto_mark = true })
@@ -111,39 +137,38 @@ require('wokamark').setup({ auto_mark = true })
 
 ---
 
-## Trigger-help integration / 集成 trigger-help
+## Trigger-help integration
 
-On setup, wokamark registers its command cheatsheet with trigger-help.nvim via
-`require('trigger_help').register_doc({ id = 'wokamark', ... })` when that
-plugin is available — best-effort: trigger-help missing → skipped silently.
-
-setup 时 wokamark 会向 trigger-help.nvim 注册命令速查文档
-（`require('trigger_help').register_doc({ id = 'wokamark', ... })`）。
-trigger-help 未安装则静默跳过。
+On setup, wokamark registers its command cheatsheet with trigger-help.nvim
+via `require('trigger_help').register_doc({ id = 'wokamark', ... })` when
+that plugin is available — best-effort: trigger-help missing → skipped
+silently.
 
 ```
-:TriggerHelp wokamark       直接打开 wokamark 速查
-:TriggerHelp → [wokamark]   从 selector 浏览
+:TriggerHelp wokamark       open the wokamark cheatsheet directly
+:TriggerHelp → [wokamark]   browse from the selector
 ```
 
 ---
 
-## Storage / 数据存储
+## Storage
 
 ```
-stdpath('state')/wokamark/index.json   — 工作区索引（含 path_hash / alias）
-stdpath('state')/wokamark/sessions/    — mksession 会话文件
+stdpath('state')/wokamark/index.json   — workspace index (path_hash / alias)
+stdpath('state')/wokamark/sessions/    — mksession session files
 ```
 
-- `path_hash` = 路径的 SHA-256（自动恢复匹配键）
-- 索引只持久化白名单字段（装饰字段不写回）
+- `path_hash` = SHA-256 of the path (auto-restore match key)
+- the index persists only whitelisted fields (decorative fields are not
+  written back)
 
 ---
 
-## Dependencies / 依赖
+## Dependencies
 
-- [snacks.nvim](https://github.com/folke/snacks.nvim) — picker（`:WokaMarkOpen`）
-- [trigger-help.nvim](https://github.com/) — 可选（集成注册速查文档）
+- [snacks.nvim](https://github.com/folke/snacks.nvim) — picker (`:WokaMarkOpen`)
+- [trigger-help.nvim](https://github.com/sin1111yi/trigger-help.nvim) —
+  optional (registers the cheatsheet)
 
 ---
 
